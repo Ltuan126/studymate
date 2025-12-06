@@ -1,69 +1,92 @@
-StudyMate
+# StudyMate
 
 StudyMate là ứng dụng hỗ trợ sinh viên quản lý môn học, bài tập và deadline hằng ngày, giúp tối ưu hoá việc học và cải thiện hiệu suất cá nhân.
 
-Chức năng chính
+---
 
-Đăng ký / đăng nhập bằng Firebase Authentication
+## Chức năng chính
 
-Thêm, sửa, xóa môn học
+- Đăng ký / đăng nhập bằng Firebase Authentication
+- Thêm, sửa, xóa môn học
+- Thêm, sửa, xóa bài tập theo từng môn
+- Đánh dấu bài tập đã hoàn thành
+- Xem danh sách bài tập theo ngày, tuần hoặc theo lịch
+- Gửi thông báo nhắc deadline
+- Thống kê số lượng bài tập đã hoàn thành
 
-Thêm, sửa, xóa bài tập theo từng môn
+---
 
-Đánh dấu bài tập đã hoàn thành
+## Công nghệ sử dụng
 
-Xem danh sách bài tập theo ngày, tuần hoặc theo lịch
+- Flutter
+- Firebase Authentication
+- Cloud Firestore
+- flutter_local_notifications
+- table_calendar
+- fl_chart
 
-Gửi thông báo nhắc deadline
+---
 
-Thống kê số lượng bài tập đã hoàn thành
+## Các màn hình chính
 
-Giao diện đơn giản, dễ sử dụng
+- Splash / Onboarding
+- Login / Register
+- Home
+- Subject List / Add Subject
+- Task Detail / Add Task
+- Calendar
+- Statistics
+- Settings
 
-Công nghệ sử dụng
+---
 
-Flutter
+## Cấu trúc thư mục
 
-Firebase Authentication (xác thực người dùng)
-
-Cloud Firestore (lưu trữ dữ liệu theo thời gian thực)
-
-flutter_local_notifications (nhắc deadline)
-
-table_calendar (hiển thị lịch)
-
-fl_chart (thống kê dạng biểu đồ)
-
-Các màn hình chính
-
-Splash / Onboarding
-
-Login / Register
-
-Home (danh sách bài tập hôm nay)
-
-Subject List / Add Subject
-
-Task Detail / Add Task
-
-Calendar (xem deadline theo ngày)
-
-Statistics (biểu đồ tiến độ)
-
-Settings (quản lý tài khoản & cấu hình app)
-
-Cấu trúc thư mục
+```
 lib/
-├── core/                # hằng số, theme, utils, styles
+├── core/                # hằng số, theme, utils
 ├── features/
-│   ├── auth/            # login, register, firebase auth
-│   ├── subjects/        # màn hình + logic môn học
-│   ├── tasks/           # màn hình + logic bài tập
-│   ├── calendar/        # lịch + filter theo ngày
-│   └── statistics/      # biểu đồ, tính toán tiến độ
+│   ├── auth/            # đăng nhập, đăng ký
+│   ├── subjects/        # quản lý môn học
+│   ├── tasks/           # quản lý bài tập
+│   ├── calendar/        # xem lịch
+│   └── statistics/      # biểu đồ thống kê
 ├── services/
-│   ├── firestore/       # CRUD Firestore
-│   ├── notification/    # local notification
-│   └── user/            # profile service
-├── widgets/             # widget dùng chung trong app
+│   ├── firestore/       # xử lý CRUD Firestore
+│   ├── notification/    # gửi thông báo
+│   └── user/            # quản lý thông tin user
+├── widgets/             # widget dùng chung
 └── main.dart
+```
+
+---
+
+## Cách chạy dự án
+
+1. Clone repository:
+```
+git clone https://github.com/your-username/studymate.git
+```
+
+2. Cài đặt package:
+```
+flutter pub get
+```
+
+3. Cấu hình Firebase:
+- Thêm google-services.json (Android)
+- Thêm GoogleService-Info.plist (iOS)
+
+4. Chạy ứng dụng:
+```
+flutter run
+```
+
+---
+
+## Định hướng phát triển thêm
+
+- Thêm mục tiêu học tập (Study Goals)
+- Thêm chế độ Dark / Light
+- Gợi ý lịch học thông minh
+- Đồng bộ nhiều thiết bị tốt hơn
