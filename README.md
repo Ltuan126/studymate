@@ -1,46 +1,69 @@
-# StudyMate
+StudyMate
 
-StudyMate là ứng dụng hỗ trợ quản lý việc học cho sinh viên, giúp theo dõi môn học, bài tập và deadline hằng ngày.
+StudyMate là ứng dụng hỗ trợ sinh viên quản lý môn học, bài tập và deadline hằng ngày, giúp tối ưu hoá việc học và cải thiện hiệu suất cá nhân.
 
----
+Chức năng chính
 
-## Chức năng
-- Đăng ký / đăng nhập người dùng (Firebase Auth)
-- Thêm, sửa, xóa môn học
-- Thêm, sửa, xóa bài tập theo môn
-- Đánh dấu bài tập đã hoàn thành
-- Xem bài tập theo lịch
-- Nhắc deadline bằng notification
-- Thống kê tiến độ học tập cơ bản
+Đăng ký / đăng nhập bằng Firebase Authentication
 
----
+Thêm, sửa, xóa môn học
 
-## Công nghệ
-- Flutter
-- Firebase Authentication
-- Cloud Firestore
-- flutter_local_notifications
-- table_calendar
-- fl_chart
+Thêm, sửa, xóa bài tập theo từng môn
 
----
+Đánh dấu bài tập đã hoàn thành
 
-## Một số màn hình chính
-- Login / Register
-- Home
-- Subject
-- Task detail
-- Calendar
-- Statistics
-- Settings
+Xem danh sách bài tập theo ngày, tuần hoặc theo lịch
 
----
+Gửi thông báo nhắc deadline
 
-## Cấu trúc thư mục
-```text
+Thống kê số lượng bài tập đã hoàn thành
+
+Giao diện đơn giản, dễ sử dụng
+
+Công nghệ sử dụng
+
+Flutter
+
+Firebase Authentication (xác thực người dùng)
+
+Cloud Firestore (lưu trữ dữ liệu theo thời gian thực)
+
+flutter_local_notifications (nhắc deadline)
+
+table_calendar (hiển thị lịch)
+
+fl_chart (thống kê dạng biểu đồ)
+
+Các màn hình chính
+
+Splash / Onboarding
+
+Login / Register
+
+Home (danh sách bài tập hôm nay)
+
+Subject List / Add Subject
+
+Task Detail / Add Task
+
+Calendar (xem deadline theo ngày)
+
+Statistics (biểu đồ tiến độ)
+
+Settings (quản lý tài khoản & cấu hình app)
+
+Cấu trúc thư mục
 lib/
-├── core/
+├── core/                # hằng số, theme, utils, styles
 ├── features/
+│   ├── auth/            # login, register, firebase auth
+│   ├── subjects/        # màn hình + logic môn học
+│   ├── tasks/           # màn hình + logic bài tập
+│   ├── calendar/        # lịch + filter theo ngày
+│   └── statistics/      # biểu đồ, tính toán tiến độ
 ├── services/
-├── widgets/
+│   ├── firestore/       # CRUD Firestore
+│   ├── notification/    # local notification
+│   └── user/            # profile service
+├── widgets/             # widget dùng chung trong app
 └── main.dart
