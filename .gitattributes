@@ -1,0 +1,22 @@
+# Auto detect text files
+* text=auto
+
+# Dart & Flutter
+*.dart text diff
+*.yaml text
+*.yml text
+
+# Markdown
+*.md text diff
+
+# Images & assets (no diff)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.svg binary
+*.gif binary
+
+# Android / iOS
+*.gradle text
+*.plist text
+*.xcconfig text
