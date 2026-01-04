@@ -16,7 +16,15 @@
 *.svg binary
 *.gif binary
 
-# Android / iOS
+# Android / iOS / Desktop configs (text)
 *.gradle text
 *.plist text
 *.xcconfig text
+
+# --- GitHub Linguist (language stats only) ---
+android/** linguist-vendored
+ios/** linguist-vendored
+windows/** linguist-vendored
+macos/** linguist-vendored
+linux/** linguist-vendored
+web/** linguist-vendored
