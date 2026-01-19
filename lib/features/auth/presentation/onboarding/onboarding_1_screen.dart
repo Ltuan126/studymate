@@ -9,7 +9,7 @@ class Onboarding1Screen extends StatelessWidget {
   Widget build(BuildContext context) {
     return OnboardingLayout(
       imageAsset: 'assets/images/onboarding.png',
-      title: 'Quản lý việc\nhọc dễ dàng',
+      title: 'Tối ưu tập \ntrung',
       description: 'Sắp xếp thời khóa biểu và theo dõi\n'
           'tiến độ môn học của bạn.',
       currentIndex: 1,
