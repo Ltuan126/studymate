@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "401828381959",
+    "project_id": "studymate-d4e94",
+    "storage_bucket": "studymate-d4e94.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:401828381959:android:7c9b9d9067d8c5610ef1a2",
+        "android_client_info": {
+          "package_name": "com.example.studymate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtLaZI8-syzuGWwdIlV7468H_Cuvm0JKs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
