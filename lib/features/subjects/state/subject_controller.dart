@@ -7,5 +7,8 @@ class SubjectController {
 
   Future<void> add(String name) => _service.addSubject(name);
 
+  Future<void> update(String id, String name) =>
+      _service.updateSubject(id, name);
+
   Future<void> delete(String id) => _service.deleteSubject(id);
 }
