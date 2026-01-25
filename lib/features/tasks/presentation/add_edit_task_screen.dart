@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../../subjects/state/subject_controller.dart';
 import '../state/task_controller.dart';
 
 class AddEditTaskScreen extends StatefulWidget {
@@ -14,10 +12,9 @@ class AddEditTaskScreen extends StatefulWidget {
 
 class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
   final _titleCtrl = TextEditingController();
-  final _subjectCtrl = SubjectController();
+  final _subjectNameCtrl = TextEditingController();
   final _taskCtrl = TaskController();
 
-  String? _selectedSubjectId;
   DateTime? _selectedDate = DateTime.now();
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
@@ -26,6 +23,7 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
   @override
   void dispose() {
     _titleCtrl.dispose();
+    _subjectNameCtrl.dispose();
     super.dispose();
   }
 
@@ -111,7 +109,9 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
         dueDate: _selectedDate,
         startTime: startDateTime,
         endTime: endDateTime,
-        subjectId: _selectedSubjectId,
+        subjectName: _subjectNameCtrl.text.trim().isNotEmpty
+            ? _subjectNameCtrl.text.trim()
+            : null,
       );
 
       if (!mounted) return;
@@ -192,45 +192,18 @@ class _AddEditTaskScreenState extends State<AddEditTaskScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Subject Dropdown
+                    // Subject Input (Text Field)
                     _buildField(
-                      hint: 'Chọn môn học',
-                      child: StreamBuilder<QuerySnapshot>(
-                        stream:
-                            _subjectCtrl.getSubjects() as Stream<QuerySnapshot>,
-                        builder: (context, snapshot) {
-                          final subjects = snapshot.data?.docs ?? [];
-                          return DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              isExpanded: true,
-                              hint: Center(
-                                child: Text(
-                                  'Chọn môn học',
-                                  style: GoogleFonts.manrope(
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.black26,
-                                  ),
-                                ),
-                              ),
-                              value: _selectedSubjectId,
-                              items: subjects.map((doc) {
-                                return DropdownMenuItem<String>(
-                                  value: doc.id,
-                                  child: Center(
-                                    child: Text(
-                                      doc['name'] ?? '',
-                                      style: GoogleFonts.manrope(
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                              onChanged: (val) =>
-                                  setState(() => _selectedSubjectId = val),
-                            ),
-                          );
-                        },
+                      hint: 'Tên môn học',
+                      child: TextField(
+                        controller: _subjectNameCtrl,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.manrope(fontWeight: FontWeight.w700),
+                        decoration: const InputDecoration(
+                          hintText: 'Tên môn học',
+                          border: InputBorder.none,
+                          hintStyle: TextStyle(color: Colors.black26),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),

@@ -1,8 +1,11 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:studymate/core/theme/app_theme.dart';
+import 'package:studymate/shared/widgets/rounded_text_field.dart';
+import 'package:studymate/shared/widgets/primary_button.dart';
+import '../state/auth_controller.dart';
 
-// 🔥 chỉnh đúng đường dẫn theo project của bạn
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -16,6 +19,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final emailCtrl = TextEditingController();
   final passCtrl = TextEditingController();
   final rePassCtrl = TextEditingController();
+  final _authController = AuthController();
 
   bool isLoading = false;
 
@@ -29,8 +33,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _register() async {
     final email = emailCtrl.text.trim();
-    final password = passCtrl.text; // Remove .trim()
-    final rePassword = rePassCtrl.text; // Remove .trim()
+    final password = passCtrl.text;
+    final rePassword = rePassCtrl.text;
 
     if (email.isEmpty || password.isEmpty || rePassword.isEmpty) {
       _showSnack('Vui lòng điền đầy đủ thông tin');
@@ -50,10 +54,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => isLoading = true);
 
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      await _authController.register(email, password);
 
       if (!mounted) return;
 
@@ -62,25 +63,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
       Navigator.of(
         context,
       ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
-    } on FirebaseAuthException catch (e) {
-      String message = 'Đăng ký thất bại: ${e.message}';
-
-      if (e.code == 'email-already-in-use') {
-        message = 'Email đã được sử dụng';
-      } else if (e.code == 'invalid-email') {
-        message = 'Email không hợp lệ';
-      } else if (e.code == 'weak-password') {
-        message = 'Mật khẩu quá yếu';
-      }
-
-      _showSnack(message);
     } catch (e) {
-      _showSnack('Lỗi hệ thống: $e');
+      _showSnack(_getErrorMessage(e.toString()));
     } finally {
       if (mounted) {
         setState(() => isLoading = false);
       }
     }
+  }
+
+  String _getErrorMessage(String error) {
+    if (error.contains('email-already-in-use')) {
+      return 'Email đã được sử dụng';
+    } else if (error.contains('invalid-email')) {
+      return 'Email không hợp lệ';
+    } else if (error.contains('weak-password')) {
+      return 'Mật khẩu quá yếu';
+    }
+    return 'Đăng ký thất bại';
   }
 
   void _showSnack(String text) {
@@ -89,9 +89,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const primary = Color(0xFF4D47E5);
-    const border = Color(0xFFD6D6DC);
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -103,87 +100,59 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 70),
-                  const Text(
+                  Text(
                     'Tạo tài khoản mới',
-                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
+                    style: GoogleFonts.manrope(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   Text(
                     'Đăng ký để bắt đầu\nquản lý tiến trình học tập',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: GoogleFonts.manrope(
                       fontSize: 14.5,
                       height: 1.4,
-                      color: Colors.black.withValues(alpha: 0.45),
+                      color: AppColors.textMuted,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 80),
 
-                  _RoundedField(
-                    controller: emailCtrl,
-                    hint: 'Email',
-                    borderColor: border,
-                  ),
+                  RoundedTextField(controller: emailCtrl, hint: 'Email'),
                   const SizedBox(height: 20),
 
-                  _RoundedField(
+                  RoundedTextField(
                     controller: passCtrl,
                     hint: 'Mật khẩu',
-                    borderColor: border,
                     obscureText: true,
                   ),
                   const SizedBox(height: 20),
 
-                  _RoundedField(
+                  RoundedTextField(
                     controller: rePassCtrl,
                     hint: 'Nhập lại mật khẩu',
-                    borderColor: border,
                     obscureText: true,
                   ),
                   const SizedBox(height: 32),
 
-                  SizedBox(
-                    width: double.infinity,
+                  PrimaryButton(
+                    text: 'Đăng ký',
+                    isLoading: isLoading,
+                    onPressed: _register,
                     height: 60,
-                    child: ElevatedButton(
-                      onPressed: isLoading ? null : _register,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                      ),
-                      child: isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation(
-                                  Colors.white,
-                                ),
-                              ),
-                            )
-                          : const Text(
-                              'Đăng ký',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                    ),
                   ),
 
                   const SizedBox(height: 20),
 
                   RichText(
                     text: TextSpan(
-                      style: const TextStyle(
+                      style: GoogleFonts.manrope(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: primary,
+                        color: AppColors.primary,
                       ),
                       children: [
                         const TextSpan(text: 'Đã có tài khoản? '),
@@ -205,50 +174,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ],
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RoundedField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hint;
-  final Color borderColor;
-  final bool obscureText;
-
-  const _RoundedField({
-    required this.controller,
-    required this.hint,
-    required this.borderColor,
-    this.obscureText = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 58,
-      child: TextField(
-        controller: controller,
-        obscureText: obscureText,
-        textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700),
-        decoration: InputDecoration(
-          hintText: hint,
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: 16,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: borderColor, width: 1.6),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: borderColor, width: 1.6),
           ),
         ),
       ),

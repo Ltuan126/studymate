@@ -41,24 +41,11 @@ class FocusScreen extends StatelessWidget {
 
                     const SizedBox(height: 40),
 
-                    /// ===== TIME SELECTION (only when not running) =====
+                    /// ===== TIME PRESETS (only when not running) =====
                     if (!timer.isRunning)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _TimeChip(
-                            label: '-5',
-                            onTap: () => timer.addMinutes(-5),
-                          ),
-                          _TimeChip(
-                            label: '+5',
-                            onTap: () => timer.addMinutes(5),
-                          ),
-                          _TimeChip(
-                            label: '+25',
-                            onTap: () => timer.addMinutes(25),
-                          ),
-                        ],
+                      _TimePresets(
+                        currentMinutes: timer.total.inMinutes,
+                        onSelect: (minutes) => timer.setMinutes(minutes),
                       ),
                   ],
                 );
@@ -289,10 +276,146 @@ class _SlideToStopState extends State<_SlideToStop> {
   }
 }
 
-class _TimeChip extends StatelessWidget {
+class _TimePresets extends StatelessWidget {
+  final int currentMinutes;
+  final ValueChanged<int> onSelect;
+
+  const _TimePresets({required this.currentMinutes, required this.onSelect});
+
+  static const List<int> presets = [25, 50, 90];
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ...presets.map(
+          (minutes) => _PresetChip(
+            label: '$minutes phút',
+            isSelected: currentMinutes == minutes,
+            onTap: () => onSelect(minutes),
+          ),
+        ),
+        _PresetChip(
+          label: '⚙️',
+          isSelected: !presets.contains(currentMinutes) && currentMinutes > 0,
+          onTap: () => _showCustomPicker(context),
+        ),
+      ],
+    );
+  }
+
+  void _showCustomPicker(BuildContext context) {
+    int selectedMinutes = currentMinutes > 0 ? currentMinutes : 25;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1A1A1F),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Thời gian tùy chỉnh',
+                    style: GoogleFonts.manrope(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _AdjustButton(
+                        icon: Icons.remove,
+                        onTap: () {
+                          if (selectedMinutes > 5) {
+                            setState(() => selectedMinutes -= 5);
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 24),
+                      Text(
+                        '$selectedMinutes',
+                        style: GoogleFonts.manrope(
+                          fontSize: 48,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'phút',
+                        style: GoogleFonts.manrope(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white54,
+                        ),
+                      ),
+                      const SizedBox(width: 24),
+                      _AdjustButton(
+                        icon: Icons.add,
+                        onTap: () {
+                          if (selectedMinutes < 180) {
+                            setState(() => selectedMinutes += 5);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  GestureDetector(
+                    onTap: () {
+                      onSelect(selectedMinutes);
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4D47E5),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Xác nhận',
+                        style: GoogleFonts.manrope(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _PresetChip extends StatelessWidget {
   final String label;
+  final bool isSelected;
   final VoidCallback onTap;
-  const _TimeChip({required this.label, required this.onTap});
+
+  const _PresetChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -300,20 +423,51 @@ class _TimeChip extends StatelessWidget {
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: isSelected
+              ? const Color(0xFF4D47E5)
+              : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFF4D47E5)
+                : Colors.white.withValues(alpha: 0.1),
+          ),
         ),
         child: Text(
           label,
           style: GoogleFonts.manrope(
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Colors.white.withValues(alpha: 0.7),
+            color: isSelected
+                ? Colors.white
+                : Colors.white.withValues(alpha: 0.7),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _AdjustButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _AdjustButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: Colors.white, size: 24),
       ),
     );
   }

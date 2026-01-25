@@ -10,13 +10,13 @@ class TaskController {
     DateTime? dueDate,
     DateTime? startTime,
     DateTime? endTime,
-    String? subjectId,
+    String? subjectName,
   }) => _service.addTask(
     title,
     dueDate: dueDate,
     startTime: startTime,
     endTime: endTime,
-    subjectId: subjectId,
+    subjectName: subjectName,
   );
 
   Future<void> update(
@@ -25,14 +25,14 @@ class TaskController {
     DateTime? dueDate,
     DateTime? startTime,
     DateTime? endTime,
-    String? subjectId,
+    String? subjectName,
   }) => _service.updateTask(
     id,
     title: title,
     dueDate: dueDate,
     startTime: startTime,
     endTime: endTime,
-    subjectId: subjectId,
+    subjectName: subjectName,
   );
 
   Future<void> toggle(String id, bool value) => _service.toggleDone(id, value);

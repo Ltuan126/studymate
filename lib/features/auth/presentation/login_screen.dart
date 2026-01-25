@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:studymate/core/theme/app_theme.dart';
+import 'package:studymate/shared/widgets/rounded_text_field.dart';
+import 'package:studymate/shared/widgets/primary_button.dart';
+import '../state/auth_controller.dart';
 
 import '../../home/presentation/home_dashboard_screen.dart';
 import 'register_screen.dart';
@@ -17,9 +21,10 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   late final TextEditingController emailCtrl;
   final passCtrl = TextEditingController();
+  final _authController = AuthController();
 
   bool isLoading = false;
-  bool _obscureText = true; // State for password visibility
+  bool _obscureText = true;
 
   @override
   void initState() {
@@ -36,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     final email = emailCtrl.text.trim();
-    final password = passCtrl.text; // Remove .trim() from password
+    final password = passCtrl.text;
 
     if (email.isEmpty || password.isEmpty) {
       _showSnack('Vui lòng nhập đầy đủ thông tin');
@@ -46,34 +51,32 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => isLoading = true);
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      await _authController.login(email, password);
 
       if (!mounted) return;
 
-      // ✅ ĐĂNG NHẬP THÀNH CÔNG → VÀO DASHBOARD
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const HomeDashboardScreen()),
       );
-    } on FirebaseAuthException catch (e) {
-      String msg = 'Đăng nhập thất bại: ${e.message}';
-      if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
-        msg = 'Không tìm thấy tài khoản hoặc thông tin không chính xác';
-      } else if (e.code == 'wrong-password') {
-        msg = 'Sai mật khẩu';
-      } else if (e.code == 'invalid-email') {
-        msg = 'Email không hợp lệ';
-      } else if (e.code == 'network-request-failed') {
-        msg = 'Lỗi kết nối mạng, vui lòng kiểm tra lại';
-      }
-      _showSnack(msg);
     } catch (e) {
-      _showSnack('Lỗi hệ thống: $e');
+      _showSnack(_getErrorMessage(e.toString()));
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
+  }
+
+  String _getErrorMessage(String error) {
+    if (error.contains('user-not-found') ||
+        error.contains('invalid-credential')) {
+      return 'Không tìm thấy tài khoản hoặc thông tin không chính xác';
+    } else if (error.contains('wrong-password')) {
+      return 'Sai mật khẩu';
+    } else if (error.contains('invalid-email')) {
+      return 'Email không hợp lệ';
+    } else if (error.contains('network-request-failed')) {
+      return 'Lỗi kết nối mạng, vui lòng kiểm tra lại';
+    }
+    return 'Đăng nhập thất bại';
   }
 
   void _showSnack(String text) {
@@ -82,9 +85,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const primary = Color(0xFF4D47E5);
-    const border = Color(0xFFD6D6DC);
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -94,25 +94,41 @@ class _LoginScreenState extends State<LoginScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 80),
-                  const Text(
-                    'Đăng nhập',
-                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
+                  const SizedBox(height: 70),
+                  Text(
+                    'Chào mừng trở lại !',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.manrope(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -1,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Đăng nhập để tiếp tục\nviệc học của bạn',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.manrope(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textMuted,
+                      height: 1.4,
+                    ),
                   ),
                   const SizedBox(height: 80),
 
-                  _RoundedField(
+                  RoundedTextField(
                     controller: emailCtrl,
-                    hint: 'Email',
-                    borderColor: border,
+                    hint: 'Email hoặc tên đăng nhập',
                   ),
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 20),
 
-                  _RoundedField(
+                  RoundedTextField(
                     controller: passCtrl,
                     hint: 'Mật khẩu',
-                    borderColor: border,
                     obscureText: _obscureText,
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -120,9 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: Colors.grey,
                       ),
                       onPressed: () {
-                        setState(() {
-                          _obscureText = !_obscureText;
-                        });
+                        setState(() => _obscureText = !_obscureText);
                       },
                     ),
                   ),
@@ -138,36 +152,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         );
                       },
-                      child: const Text('Quên mật khẩu?'),
+                      child: Text(
+                        'Quên mật khẩu?',
+                        style: GoogleFonts.manrope(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
                     ),
                   ),
 
                   const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
+                  PrimaryButton(
+                    text: 'Đăng nhập',
+                    isLoading: isLoading,
+                    onPressed: _login,
                     height: 60,
-                    child: ElevatedButton(
-                      onPressed: isLoading ? null : _login,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                      ),
-                      child: isLoading
-                          ? const CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            )
-                          : const Text(
-                              'Đăng nhập',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                    ),
                   ),
 
                   const SizedBox(height: 20),
@@ -179,51 +180,28 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       );
                     },
-                    child: const Text('Chưa có tài khoản? Đăng ký'),
+                    child: RichText(
+                      text: TextSpan(
+                        style: GoogleFonts.manrope(
+                          fontSize: 14,
+                          color: AppColors.textMuted,
+                        ),
+                        children: [
+                          const TextSpan(text: 'Chưa có tài khoản? '),
+                          TextSpan(
+                            text: 'Đăng ký',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RoundedField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hint;
-  final Color borderColor;
-  final bool obscureText;
-  final Widget? suffixIcon;
-
-  const _RoundedField({
-    required this.controller,
-    required this.hint,
-    required this.borderColor,
-    this.obscureText = false,
-    this.suffixIcon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 58,
-      child: TextField(
-        controller: controller,
-        obscureText: obscureText,
-        textAlign: TextAlign.center,
-        decoration: InputDecoration(
-          hintText: hint,
-          suffixIcon: suffixIcon,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: borderColor, width: 1.6),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: borderColor, width: 1.6),
           ),
         ),
       ),
