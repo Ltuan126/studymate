@@ -29,8 +29,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _register() async {
     final email = emailCtrl.text.trim();
-    final password = passCtrl.text.trim();
-    final rePassword = rePassCtrl.text.trim();
+    final password = passCtrl.text; // Remove .trim()
+    final rePassword = rePassCtrl.text; // Remove .trim()
 
     if (email.isEmpty || password.isEmpty || rePassword.isEmpty) {
       _showSnack('Vui lòng điền đầy đủ thông tin');
@@ -63,7 +63,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         context,
       ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
     } on FirebaseAuthException catch (e) {
-      String message = 'Đăng ký thất bại';
+      String message = 'Đăng ký thất bại: ${e.message}';
 
       if (e.code == 'email-already-in-use') {
         message = 'Email đã được sử dụng';
@@ -74,6 +74,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
 
       _showSnack(message);
+    } catch (e) {
+      _showSnack('Lỗi hệ thống: $e');
     } finally {
       if (mounted) {
         setState(() => isLoading = false);

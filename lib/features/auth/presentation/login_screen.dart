@@ -19,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final passCtrl = TextEditingController();
 
   bool isLoading = false;
+  bool _obscureText = true; // State for password visibility
 
   @override
   void initState() {
@@ -35,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     final email = emailCtrl.text.trim();
-    final password = passCtrl.text.trim();
+    final password = passCtrl.text; // Remove .trim() from password
 
     if (email.isEmpty || password.isEmpty) {
       _showSnack('Vui lòng nhập đầy đủ thông tin');
@@ -57,15 +58,19 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (_) => const HomeDashboardScreen()),
       );
     } on FirebaseAuthException catch (e) {
-      String msg = 'Đăng nhập thất bại';
-      if (e.code == 'user-not-found') {
-        msg = 'Không tìm thấy tài khoản';
+      String msg = 'Đăng nhập thất bại: ${e.message}';
+      if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
+        msg = 'Không tìm thấy tài khoản hoặc thông tin không chính xác';
       } else if (e.code == 'wrong-password') {
         msg = 'Sai mật khẩu';
       } else if (e.code == 'invalid-email') {
         msg = 'Email không hợp lệ';
+      } else if (e.code == 'network-request-failed') {
+        msg = 'Lỗi kết nối mạng, vui lòng kiểm tra lại';
       }
       _showSnack(msg);
+    } catch (e) {
+      _showSnack('Lỗi hệ thống: $e');
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -108,7 +113,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: passCtrl,
                     hint: 'Mật khẩu',
                     borderColor: border,
-                    obscureText: true,
+                    obscureText: _obscureText,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureText ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureText = !_obscureText;
+                        });
+                      },
+                    ),
                   ),
 
                   const SizedBox(height: 12),
@@ -180,12 +196,14 @@ class _RoundedField extends StatelessWidget {
   final String hint;
   final Color borderColor;
   final bool obscureText;
+  final Widget? suffixIcon;
 
   const _RoundedField({
     required this.controller,
     required this.hint,
     required this.borderColor,
     this.obscureText = false,
+    this.suffixIcon,
   });
 
   @override
@@ -198,6 +216,7 @@ class _RoundedField extends StatelessWidget {
         textAlign: TextAlign.center,
         decoration: InputDecoration(
           hintText: hint,
+          suffixIcon: suffixIcon,
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20),
             borderSide: BorderSide(color: borderColor, width: 1.6),
