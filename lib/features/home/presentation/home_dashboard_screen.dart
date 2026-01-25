@@ -1,8 +1,48 @@
+// lib/features/home/presentation/home_dashboard_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:studymate/features/focus/presentation/focus_screen.dart';
+import 'package:studymate/features/calendar/presentation/calendar_screen.dart';
+import 'package:studymate/features/focus/domain/focus_timer.dart';
+import 'package:studymate/features/profile/profile_screen.dart';
 
-class HomeDashboardScreen extends StatelessWidget {
+class HomeDashboardScreen extends StatefulWidget {
   const HomeDashboardScreen({super.key});
+
+  @override
+  State<HomeDashboardScreen> createState() => _HomeDashboardScreenState();
+}
+
+class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
+  int _currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          const _DashboardContent(),
+          FocusScreen(key: const ValueKey('focus')),
+          const CalendarScreen(),
+          const ProfileScreen(),
+        ],
+      ),
+      bottomNavigationBar: _BottomNav(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() => _currentIndex = index);
+        },
+      ),
+    );
+  }
+}
+
+/// ================= DASHBOARD UI =================
+
+class _DashboardContent extends StatelessWidget {
+  const _DashboardContent();
 
   @override
   Widget build(BuildContext context) {
@@ -12,116 +52,85 @@ class HomeDashboardScreen extends StatelessWidget {
     const accent = Color(0xFFF59E0B);
     const muted = Color(0xFF7C7C86);
 
+    final focusTimer = FocusTimer.instance;
+
     return Scaffold(
       backgroundColor: bg,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFFF8F8FA),
-                    Color(0xFFF1F2F6),
-                  ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _Avatar(),
+              const SizedBox(height: 18),
+              Text(
+                'Xin chào Nam, 👋',
+                style: GoogleFonts.manrope(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            top: -60,
-            right: -40,
-            child: Container(
-              width: 180,
-              height: 180,
-              decoration: BoxDecoration(
-                color: const Color(0xFF4B42D6).withOpacity(0.08),
-                shape: BoxShape.circle,
+              const SizedBox(height: 6),
+              Text(
+                'Hôm nay bạn muốn học gì?',
+                style: GoogleFonts.manrope(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: muted,
+                ),
               ),
-            ),
-          ),
-          Positioned(
-            bottom: 140,
-            left: -40,
-            child: Container(
-              width: 140,
-              height: 140,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF59E0B).withOpacity(0.10),
-                shape: BoxShape.circle,
+              const SizedBox(height: 28),
+              const _ProgressCard(
+                title: 'Tiến độ tuần này',
+                color: card,
+                activeColor: primary,
               ),
-            ),
-          ),
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 22),
+
+              Row(
                 children: [
-                  const SizedBox(height: 8),
-                  _Avatar(),
-                  const SizedBox(height: 18),
-                  Text(
-                    'Xin chào Nam, 👋',
-                    style: GoogleFonts.manrope(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Hôm nay bạn muốn học gì?',
-                    style: GoogleFonts.manrope(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: muted,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  _ProgressCard(
-                    title: 'Tiến độ tuần này',
-                    color: card,
-                    activeColor: primary,
-                  ),
-                  const SizedBox(height: 22),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _StatCard(
+                  Expanded(
+                    child: AnimatedBuilder(
+                      animation: focusTimer,
+                      builder: (_, __) {
+                        return _StatCard(
                           color: primary,
-                          label: '25:00',
-                          sub: ' ',
-                          icon: Icons.play_arrow_rounded,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _StatCard(
-                          color: accent,
-                          label: '4/5',
-                          sub: 'Bài tập',
-                          icon: Icons.assignment_rounded,
-                          showProgress: true,
-                        ),
-                      ),
-                    ],
+                          label: focusTimer.formattedTime,
+                          sub: 'Focus',
+                          icon: focusTimer.isRunning
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                        );
+                      },
+                    ),
                   ),
-                  const SizedBox(height: 90),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: _StatCard(
+                      color: accent,
+                      label: '4/5',
+                      sub: 'Bài tập',
+                      icon: Icons.assignment_rounded,
+                    ),
+                  ),
                 ],
               ),
-            ),
+
+              const SizedBox(height: 90),
+            ],
           ),
-        ],
+        ),
       ),
-      bottomNavigationBar: const _BottomNav(),
     );
   }
 }
 
+/// ================= COMPONENTS =================
+
 class _Avatar extends StatelessWidget {
+  const _Avatar();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -134,10 +143,7 @@ class _Avatar extends StatelessWidget {
         ),
       ),
       child: const Center(
-        child: Text(
-          '🧑🏻‍🎓',
-          style: TextStyle(fontSize: 22),
-        ),
+        child: Text('🧑🏻‍🎓', style: TextStyle(fontSize: 22)),
       ),
     );
   }
@@ -156,20 +162,11 @@ class _ProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bars = List.generate(7, (index) => index);
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 14,
-            offset: const Offset(0, 10),
-          ),
-        ],
       ),
       child: Column(
         children: [
@@ -178,24 +175,25 @@ class _ProgressCard extends StatelessWidget {
             style: GoogleFonts.manrope(
               fontSize: 15,
               fontWeight: FontWeight.w800,
-              color: Colors.black,
             ),
           ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: bars.map((index) {
-              final isActive = index == bars.length - 1;
+            children: List.generate(7, (index) {
+              final isActive = index == 6;
               return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 width: 20,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: isActive ? activeColor : Colors.white.withOpacity(0.5),
+                  color: isActive
+                      ? activeColor
+                      : Colors.white.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(8),
                 ),
               );
-            }).toList(),
+            }),
           ),
         ],
       ),
@@ -208,14 +206,12 @@ class _StatCard extends StatelessWidget {
   final String label;
   final String sub;
   final IconData icon;
-  final bool showProgress;
 
   const _StatCard({
     required this.color,
     required this.label,
     required this.sub,
     required this.icon,
-    this.showProgress = false,
   });
 
   @override
@@ -226,18 +222,11 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.28),
-            blurRadius: 18,
-            offset: const Offset(0, 12),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.white.withOpacity(0.9), size: 26),
+          Icon(icon, color: Colors.white, size: 26),
           const Spacer(),
           Text(
             label,
@@ -247,48 +236,35 @@ class _StatCard extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          if (sub.trim().isNotEmpty)
-            Text(
-              sub,
-              style: GoogleFonts.manrope(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Colors.white.withOpacity(0.9),
-              ),
+          Text(
+            sub,
+            style: GoogleFonts.manrope(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.white70,
             ),
-          if (showProgress) ...[
-            const SizedBox(height: 10),
-            Container(
-              height: 6,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.25),
-                borderRadius: BorderRadius.circular(99),
-              ),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  width: 56,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ],
       ),
     );
   }
 }
 
+/// ================= BOTTOM NAV =================
+
 class _BottomNav extends StatelessWidget {
-  const _BottomNav();
+  final int currentIndex;
+  final Function(int) onTap;
+
+  const _BottomNav({
+    required this.currentIndex,
+    required this.onTap,
+  });
+
+  static const primary = Color(0xFF4B42D6);
 
   @override
   Widget build(BuildContext context) {
-    const primary = Color(0xFF4B42D6);
-
     return Container(
       padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10, top: 8),
       decoration: const BoxDecoration(
@@ -304,10 +280,26 @@ class _BottomNav extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _NavIcon(icon: Icons.home_rounded, active: true, color: primary),
-          _NavIcon(icon: Icons.qr_code_scanner_rounded, color: primary),
-          _NavIcon(icon: Icons.calendar_month_rounded, color: primary),
-          _NavIcon(icon: Icons.person_outline_rounded, color: primary),
+          _NavIcon(
+            icon: Icons.home_rounded,
+            active: currentIndex == 0,
+            onTap: () => onTap(0),
+          ),
+          _NavIcon(
+            icon: Icons.qr_code_scanner_rounded,
+            active: currentIndex == 1,
+            onTap: () => onTap(1),
+          ),
+          _NavIcon(
+            icon: Icons.calendar_month_rounded,
+            active: currentIndex == 2,
+            onTap: () => onTap(2),
+          ),
+          _NavIcon(
+            icon: Icons.person_outline_rounded,
+            active: currentIndex == 3,
+            onTap: () => onTap(3),
+          ),
         ],
       ),
     );
@@ -317,27 +309,32 @@ class _BottomNav extends StatelessWidget {
 class _NavIcon extends StatelessWidget {
   final IconData icon;
   final bool active;
-  final Color color;
+  final VoidCallback onTap;
 
   const _NavIcon({
     required this.icon,
-    this.active = false,
-    required this.color,
+    required this.active,
+    required this.onTap,
   });
+
+  static const primary = Color(0xFF4B42D6);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: active ? color.withOpacity(0.12) : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Icon(
-        icon,
-        color: active ? color : color.withOpacity(0.6),
-        size: 22,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: active ? primary.withOpacity(0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          icon,
+          color: active ? primary : primary.withOpacity(0.6),
+          size: 22,
+        ),
       ),
     );
   }

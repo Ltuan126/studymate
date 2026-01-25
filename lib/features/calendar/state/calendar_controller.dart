@@ -1,55 +1,40 @@
 import 'package:flutter/material.dart';
-import '../../../services/firestore/task_service.dart';
+import '../../tasks/task_model.dart';
 
 class CalendarController extends ChangeNotifier {
-  final TaskService _taskService = TaskService();
-
   DateTime selectedDate = DateTime.now();
 
+  final Map<DateTime, List<TaskModel>> _tasks = {};
+
+  DateTime _key(DateTime d) => DateTime(d.year, d.month, d.day);
+
+  List<TaskModel> get tasksOfDay {
+    return _tasks[_key(selectedDate)] ?? [];
+  }
+
   void selectDate(DateTime date) {
-    selectedDate = date;
+    selectedDate = _key(date);
     notifyListeners();
   }
 
-  Stream getTasksByDate(DateTime date) {
-    try {
-      return _taskService.getTasks().map((snapshot) {
-        final tasks = snapshot.docs.where((task) {
-          final taskData = task.data() as Map<String, dynamic>;
-          final dueDate = taskData['dueDate'];
-
-          if (dueDate == null) return false;
-
-          final taskDate = (dueDate as dynamic).toDate();
-          return taskDate.year == date.year &&
-              taskDate.month == date.month &&
-              taskDate.day == date.day;
-        }).toList();
-
-        return tasks;
-      });
-    } catch (e) {
-      throw Exception('Lỗi tải tasks: $e');
-    }
+  void addTask(TaskModel task) {
+    final key = _key(task.date);
+    _tasks.putIfAbsent(key, () => []);
+    _tasks[key]!.add(task);
+    notifyListeners();
   }
 
-  Stream getTasksByMonth(int month, int year) {
-    try {
-      return _taskService.getTasks().map((snapshot) {
-        final tasks = snapshot.docs.where((task) {
-          final taskData = task.data() as Map<String, dynamic>;
-          final dueDate = taskData['dueDate'];
+  void updateTask(TaskModel oldTask, TaskModel newTask) {
+    final key = _key(oldTask.date);
+    final list = _tasks[key];
+    if (list == null) return;
+    final index = list.indexOf(oldTask);
+    list[index] = newTask;
+    notifyListeners();
+  }
 
-          if (dueDate == null) return false;
-
-          final taskDate = (dueDate as dynamic).toDate();
-          return taskDate.year == year && taskDate.month == month;
-        }).toList();
-
-        return tasks;
-      });
-    } catch (e) {
-      throw Exception('Lỗi tải tasks tháng: $e');
-    }
+  void deleteTask(TaskModel task) {
+    _tasks[_key(task.date)]?.remove(task);
+    notifyListeners();
   }
 }
