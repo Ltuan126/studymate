@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:studymate/features/profile/presentation/personal_info_screen.dart';
+import 'package:studymate/features/profile/presentation/change_password_screen.dart';
+
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  static String _getUserName() {
+  String _getUserName() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return 'Bạn';
-    return user.email?.split('@').first ?? 'Bạn';
+    return user.displayName ?? user.email?.split('@').first ?? 'Bạn';
   }
 
   @override
@@ -31,41 +34,59 @@ class ProfileScreen extends StatelessWidget {
             // Name
             Text(
               _getUserName(),
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
             ),
 
             const SizedBox(height: 32),
 
-            // Menu
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                children: const [
+                children: [
                   _ProfileItem(
                     icon: Icons.person_outline,
                     text: 'Thông tin cá nhân',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>  PersonalInfoScreen(),
+                        ),
+                      );
+                    },
                   ),
                   _ProfileItem(
-                    icon: Icons.lock_outline,
-                    text: 'Thay đổi mật khẩu',
-                  ),
-                  _ProfileItem(
+                        icon: Icons.lock_outline,
+                        text: 'Thay đổi mật khẩu',
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ChangePasswordScreen(),
+                            ),
+                          );
+                        },
+                      ),
+
+                  const _ProfileItem(
                     icon: Icons.cloud_outlined,
                     text: 'Sao lưu dữ liệu',
                   ),
-                  _ProfileItem(
+                  const _ProfileItem(
                     icon: Icons.hourglass_bottom,
                     text: 'Thời gian tập trung',
                   ),
-                  _ProfileItem(
+                  const _ProfileItem(
                     icon: Icons.notifications_none,
                     text: 'Thông báo nhắc nhở',
                   ),
-                  _ProfileItem(
+                  const _ProfileItem(
                     icon: Icons.dark_mode_outlined,
                     text: 'Chế độ nền tối',
                   ),
-                  _ProfileItem(
+                  const _ProfileItem(
                     icon: Icons.help_outline,
                     text: 'Trợ giúp & phản hồi',
                   ),
@@ -73,7 +94,6 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
 
-            // Logout button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: SizedBox(
@@ -108,20 +128,30 @@ class ProfileScreen extends StatelessWidget {
 class _ProfileItem extends StatelessWidget {
   final IconData icon;
   final String text;
+  final VoidCallback? onTap;
 
-  const _ProfileItem({required this.icon, required this.text});
+  const _ProfileItem({
+    required this.icon,
+    required this.text,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.grey.shade700),
-          const SizedBox(width: 16),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 15))),
-          const Icon(Icons.chevron_right, color: Colors.grey),
-        ],
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 20),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.grey.shade700),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(text, style: const TextStyle(fontSize: 15)),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.grey),
+          ],
+        ),
       ),
     );
   }

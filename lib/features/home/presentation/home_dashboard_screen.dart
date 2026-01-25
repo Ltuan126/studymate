@@ -7,9 +7,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:studymate/features/focus/presentation/focus_screen.dart';
 import 'package:studymate/features/calendar/presentation/calendar_screen.dart';
 import 'package:studymate/features/focus/domain/focus_timer.dart';
-import 'package:studymate/features/profile/profile_screen.dart';
+import 'package:studymate/features/profile/presentation/profile_screen.dart';
 import 'package:studymate/features/tasks/presentation/add_edit_task_screen.dart';
 import 'package:studymate/features/tasks/presentation/task_list_screen.dart';
+
 
 class HomeDashboardScreen extends StatefulWidget {
   const HomeDashboardScreen({super.key});
