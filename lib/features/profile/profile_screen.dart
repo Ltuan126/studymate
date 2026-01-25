@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
+
+  static String _getUserName() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return 'Bạn';
+    return user.email?.split('@').first ?? 'Bạn';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,22 +23,15 @@ class ProfileScreen extends StatelessWidget {
             CircleAvatar(
               radius: 48,
               backgroundColor: Colors.pinkAccent.shade100,
-              child: const Icon(
-                Icons.person,
-                size: 56,
-                color: Colors.white,
-              ),
+              child: const Icon(Icons.person, size: 56, color: Colors.white),
             ),
 
             const SizedBox(height: 16),
 
             // Name
-            const Text(
-              'Nguyễn Thành Nam',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+            Text(
+              _getUserName(),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 32),
@@ -80,7 +80,9 @@ class ProfileScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    await FirebaseAuth.instance.signOut();
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
                     shape: RoundedRectangleBorder(
@@ -107,10 +109,7 @@ class _ProfileItem extends StatelessWidget {
   final IconData icon;
   final String text;
 
-  const _ProfileItem({
-    required this.icon,
-    required this.text,
-  });
+  const _ProfileItem({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -120,12 +119,7 @@ class _ProfileItem extends StatelessWidget {
         children: [
           Icon(icon, color: Colors.grey.shade700),
           const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 15),
-            ),
-          ),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 15))),
           const Icon(Icons.chevron_right, color: Colors.grey),
         ],
       ),

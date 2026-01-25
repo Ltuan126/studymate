@@ -6,14 +6,10 @@ class SubjectListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Môn học'),
-      ),
+      appBar: AppBar(title: const Text('Môn học')),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Theme.of(context).primaryColor,
-        onPressed: () {
-          
-        },
+        onPressed: () {},
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: Padding(
@@ -29,7 +25,7 @@ class SubjectListScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -38,8 +34,9 @@ class SubjectListScreen extends StatelessWidget {
               child: Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor:
-                        Theme.of(context).primaryColor.withOpacity(0.1),
+                    backgroundColor: Theme.of(
+                      context,
+                    ).primaryColor.withValues(alpha: 0.1),
                     child: Icon(
                       Icons.book,
                       color: Theme.of(context).primaryColor,
@@ -50,8 +47,8 @@ class SubjectListScreen extends StatelessWidget {
                     child: Text(
                       'Môn học ${index + 1}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],

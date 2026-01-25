@@ -59,11 +59,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       _showSnack('Đăng ký thành công');
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => const LoginScreen(),
-        ),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
     } on FirebaseAuthException catch (e) {
       String message = 'Đăng ký thất bại';
 
@@ -84,9 +82,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _showSnack(String text) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(text)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
   @override
@@ -107,10 +103,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 70),
                   const Text(
                     'Tạo tài khoản mới',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 24),
                   Text(
@@ -119,7 +112,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: TextStyle(
                       fontSize: 14.5,
                       height: 1.4,
-                      color: Colors.black.withOpacity(0.45),
+                      color: Colors.black.withValues(alpha: 0.45),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -155,6 +148,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onPressed: isLoading ? null : _register,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primary,
+                        foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
                         ),
@@ -165,8 +159,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               height: 24,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation(Colors.white),
+                                valueColor: AlwaysStoppedAnimation(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : const Text(
@@ -192,9 +187,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         const TextSpan(text: 'Đã có tài khoản? '),
                         TextSpan(
                           text: 'Đăng nhập',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                          ),
+                          style: const TextStyle(fontWeight: FontWeight.w800),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () {
                               Navigator.of(context).pushReplacement(
@@ -238,16 +231,15 @@ class _RoundedField extends StatelessWidget {
         controller: controller,
         obscureText: obscureText,
         textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 14.5,
-          fontWeight: FontWeight.w700,
-        ),
+        style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700),
         decoration: InputDecoration(
           hintText: hint,
           filled: true,
           fillColor: Colors.white,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: 16,
+          ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20),
             borderSide: BorderSide(color: borderColor, width: 1.6),

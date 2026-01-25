@@ -8,10 +8,7 @@ import 'forgot_password_screen.dart';
 class LoginScreen extends StatefulWidget {
   final String? initialEmail;
 
-  const LoginScreen({
-    super.key,
-    this.initialEmail,
-  });
+  const LoginScreen({super.key, this.initialEmail});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -57,9 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // ✅ ĐĂNG NHẬP THÀNH CÔNG → VÀO DASHBOARD
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => const HomeDashboardScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const HomeDashboardScreen()),
       );
     } on FirebaseAuthException catch (e) {
       String msg = 'Đăng nhập thất bại';
@@ -77,9 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _showSnack(String text) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(text)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
   @override
@@ -100,10 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 80),
                   const Text(
                     'Đăng nhập',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 80),
 
@@ -144,6 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: isLoading ? null : _login,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primary,
+                        foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
                         ),

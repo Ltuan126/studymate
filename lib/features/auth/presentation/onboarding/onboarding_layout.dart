@@ -91,6 +91,7 @@ class OnboardingLayout extends StatelessWidget {
                   onPressed: onContinue,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
