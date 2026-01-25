@@ -23,9 +23,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final email = emailCtrl.text.trim();
 
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập email')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Vui lòng nhập email')));
       return;
     }
 
@@ -37,16 +37,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã gửi email đặt lại mật khẩu'),
-        ),
+        const SnackBar(content: Text('Đã gửi email đặt lại mật khẩu')),
       );
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => const LoginScreen(),
-        ),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
     } on FirebaseAuthException catch (e) {
       String message = 'Có lỗi xảy ra';
       if (e.code == 'user-not-found') {
@@ -55,9 +51,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         message = 'Email không hợp lệ';
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) {
         setState(() => isLoading = false);
@@ -97,7 +93,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     style: TextStyle(
                       fontSize: 14.5,
                       height: 1.35,
-                      color: Colors.black.withOpacity(0.45),
+                      color: Colors.black.withValues(alpha: 0.45),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -126,8 +122,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               height: 24,
                               width: 24,
                               child: CircularProgressIndicator(
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                                 strokeWidth: 2,
                               ),
                             )
@@ -144,9 +141,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   TextButton(
                     onPressed: () {
                       Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (_) => const LoginScreen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
                       );
                     },
                     child: const Text(
@@ -195,12 +190,14 @@ class _RoundedField extends StatelessWidget {
           hintStyle: TextStyle(
             fontSize: 14.5,
             fontWeight: FontWeight.w700,
-            color: Colors.black.withOpacity(0.70),
+            color: Colors.black.withValues(alpha: 0.70),
           ),
           filled: true,
           fillColor: Colors.white,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: 16,
+          ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20),
             borderSide: BorderSide(color: borderColor, width: 1.6),

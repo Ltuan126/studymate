@@ -2,10 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:studymate/features/focus/presentation/focus_screen.dart';
 import 'package:studymate/features/calendar/presentation/calendar_screen.dart';
 import 'package:studymate/features/focus/domain/focus_timer.dart';
 import 'package:studymate/features/profile/profile_screen.dart';
+import 'package:studymate/features/tasks/presentation/add_edit_task_screen.dart';
+import 'package:studymate/features/tasks/presentation/task_list_screen.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
   const HomeDashboardScreen({super.key});
@@ -44,6 +48,25 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
 class _DashboardContent extends StatelessWidget {
   const _DashboardContent();
 
+  String _getUserName() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return 'Bạn';
+    // Lấy phần trước @ của email làm tên
+    final email = user.email ?? '';
+    final name = email.split('@').first;
+    return name.isNotEmpty ? name : 'Bạn';
+  }
+
+  Stream<QuerySnapshot>? _getTasksStream() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return null;
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('tasks')
+        .snapshots();
+  }
+
   @override
   Widget build(BuildContext context) {
     const bg = Color(0xFFF6F6F8);
@@ -53,9 +76,19 @@ class _DashboardContent extends StatelessWidget {
     const muted = Color(0xFF7C7C86);
 
     final focusTimer = FocusTimer.instance;
+    final userName = _getUserName();
 
     return Scaffold(
       backgroundColor: bg,
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: primary,
+        onPressed: () {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const AddEditTaskScreen()));
+        },
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
@@ -65,7 +98,7 @@ class _DashboardContent extends StatelessWidget {
               const _Avatar(),
               const SizedBox(height: 18),
               Text(
-                'Xin chào Nam, 👋',
+                'Xin chào $userName, 👋',
                 style: GoogleFonts.manrope(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
@@ -93,7 +126,7 @@ class _DashboardContent extends StatelessWidget {
                   Expanded(
                     child: AnimatedBuilder(
                       animation: focusTimer,
-                      builder: (_, __) {
+                      builder: (_, child) {
                         return _StatCard(
                           color: primary,
                           label: focusTimer.formattedTime,
@@ -106,12 +139,33 @@ class _DashboardContent extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  const Expanded(
-                    child: _StatCard(
-                      color: accent,
-                      label: '4/5',
-                      sub: 'Bài tập',
-                      icon: Icons.assignment_rounded,
+                  Expanded(
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: _getTasksStream(),
+                      builder: (context, snapshot) {
+                        final tasks = snapshot.data?.docs ?? [];
+                        final total = tasks.length;
+                        final done = tasks.where((doc) {
+                          final data = doc.data() as Map<String, dynamic>;
+                          return data['isDone'] == true;
+                        }).length;
+
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const TaskListScreen(),
+                              ),
+                            );
+                          },
+                          child: _StatCard(
+                            color: accent,
+                            label: '$done/$total',
+                            sub: 'Bài tập',
+                            icon: Icons.assignment_rounded,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -189,7 +243,7 @@ class _ProgressCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isActive
                       ? activeColor
-                      : Colors.white.withOpacity(0.5),
+                      : Colors.white.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(8),
                 ),
               );
@@ -256,12 +310,7 @@ class _BottomNav extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
 
-  const _BottomNav({
-    required this.currentIndex,
-    required this.onTap,
-  });
-
-  static const primary = Color(0xFF4B42D6);
+  const _BottomNav({required this.currentIndex, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -327,12 +376,12 @@ class _NavIcon extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: active ? primary.withOpacity(0.12) : Colors.transparent,
+          color: active ? primary.withValues(alpha: 0.12) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(
           icon,
-          color: active ? primary : primary.withOpacity(0.6),
+          color: active ? primary : primary.withValues(alpha: 0.6),
           size: 22,
         ),
       ),

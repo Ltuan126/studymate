@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:studymate/features/tasks/presentation/add_edit_task_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -8,40 +12,39 @@ class CalendarScreen extends StatefulWidget {
   State<CalendarScreen> createState() => _CalendarScreenState();
 }
 
-/* =======================
-   MODEL (đặt chung cho đỡ đỏ)
-======================= */
-class Task {
-  final String id;
-  String title;
-  DateTime date;
-  TimeOfDay start;
-  TimeOfDay end;
-  Color color;
-
-  Task({
-    required this.id,
-    required this.title,
-    required this.date,
-    required this.start,
-    required this.end,
-    required this.color,
-  });
-}
-
 class _CalendarScreenState extends State<CalendarScreen> {
   DateTime selectedDate = DateTime.now();
 
-  final Map<DateTime, List<Task>> tasksByDate = {};
+  DateTime get _startOfDay =>
+      DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+  DateTime get _endOfDay => DateTime(
+    selectedDate.year,
+    selectedDate.month,
+    selectedDate.day,
+    23,
+    59,
+    59,
+  );
 
-  List<Task> get tasksOfSelectedDay {
-    final key = DateUtils.dateOnly(selectedDate);
-    return tasksByDate[key] ?? [];
+  Stream<QuerySnapshot>? _getTasksStream() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return null;
+
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('tasks')
+        .where(
+          'dueDate',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(_startOfDay),
+        )
+        .where('dueDate', isLessThanOrEqualTo: Timestamp.fromDate(_endOfDay))
+        .snapshots();
   }
 
   @override
   Widget build(BuildContext context) {
-    final monthTitle = DateFormat('MMMM yyyy', 'vi').format(selectedDate);
+    final monthTitle = DateFormat('MMMM, yyyy', 'vi').format(selectedDate);
 
     return Scaffold(
       backgroundColor: const Color(0xFFFDF6FB),
@@ -49,310 +52,253 @@ class _CalendarScreenState extends State<CalendarScreen> {
         automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text(
-          monthTitle,
-          style: const TextStyle(color: Colors.black),
+        title: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: Text(
+            monthTitle.replaceFirst(monthTitle[0], monthTitle[0].toUpperCase()),
+            style: GoogleFonts.manrope(
+              color: Colors.black,
+              fontWeight: FontWeight.w800,
+              fontSize: 22,
+            ),
+          ),
         ),
-        centerTitle: true,
+        centerTitle: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.add, color: Colors.black),
-            onPressed: _addTask,
-          )
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AddEditTaskScreen()),
+              );
+            },
+          ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _buildDaySelector(),
-            const SizedBox(height: 24),
-            Expanded(child: _buildTaskList()),
-          ],
-        ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 20),
+          _buildDaySelector(),
+          const SizedBox(height: 40),
+          Expanded(child: _buildTaskList()),
+        ],
       ),
     );
   }
 
-  /* =======================
-     DAY SELECTOR (REAL TIME)
-  ======================= */
   Widget _buildDaySelector() {
-    final startWeek =
-        selectedDate.subtract(Duration(days: selectedDate.weekday - 1));
+    // Use selectedDate to determine the week to show
+    final startWeek = selectedDate.subtract(
+      Duration(days: selectedDate.weekday - 1),
+    );
 
-    return SizedBox(
-      height: 80,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: 7,
-        itemBuilder: (_, i) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: List.generate(7, (i) {
           final day = startWeek.add(Duration(days: i));
           final isSelected = DateUtils.isSameDay(day, selectedDate);
 
-          return GestureDetector(
-            onTap: () => setState(() => selectedDate = day),
-            child: Container(
-              width: 60,
-              margin: const EdgeInsets.only(right: 12),
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.deepPurple : Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    DateFormat('EEE', 'vi').format(day),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isSelected ? Colors.white : Colors.grey,
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => selectedDate = day),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: isSelected
+                    ? BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0xFF6C63FF), Color(0xFF4D47E5)],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFF4D47E5,
+                            ).withValues(alpha: 0.4),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      )
+                    : null,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      DateFormat('EEE', 'vi').format(day),
+                      style: GoogleFonts.manrope(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: isSelected
+                            ? Colors.white.withValues(alpha: 0.8)
+                            : Colors.black38,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    day.day.toString(),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.white : Colors.black,
+                    const SizedBox(height: 8),
+                    Text(
+                      DateFormat('dd').format(day),
+                      style: GoogleFonts.manrope(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: isSelected ? Colors.white : Colors.black,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );
-        },
+        }),
       ),
     );
   }
 
-  /* =======================
-     TASK LIST
-  ======================= */
   Widget _buildTaskList() {
-    if (tasksOfSelectedDay.isEmpty) {
-      return const Center(
-        child: Text(
-          'Chưa có lịch cho ngày này',
-          style: TextStyle(color: Colors.grey),
-        ),
-      );
-    }
+    return StreamBuilder<QuerySnapshot>(
+      stream: _getTasksStream(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    return ListView.builder(
-      itemCount: tasksOfSelectedDay.length,
-      itemBuilder: (_, index) {
-        final task = tasksOfSelectedDay[index];
-        return _TaskCard(
-          task: task,
-          onEdit: () => _editTask(task),
-          onDelete: () => _deleteTask(task),
-        );
-      },
-    );
-  }
-
-  /* =======================
-     ADD / EDIT / DELETE
-  ======================= */
-  void _addTask() async {
-    final task = await _openTaskDialog();
-    if (task == null) return;
-
-    final key = DateUtils.dateOnly(task.date);
-    setState(() {
-      tasksByDate.putIfAbsent(key, () => []);
-      tasksByDate[key]!.add(task);
-    });
-  }
-
-  void _editTask(Task task) async {
-    final updated = await _openTaskDialog(oldTask: task);
-    if (updated == null) return;
-
-    setState(() {
-      task.title = updated.title;
-      task.start = updated.start;
-      task.end = updated.end;
-      task.color = updated.color;
-    });
-  }
-
-  void _deleteTask(Task task) {
-    final key = DateUtils.dateOnly(task.date);
-    setState(() {
-      tasksByDate[key]?.remove(task);
-    });
-  }
-
-  /* =======================
-     ADD / EDIT DIALOG
-  ======================= */
-  Future<Task?> _openTaskDialog({Task? oldTask}) async {
-    final titleCtrl =
-        TextEditingController(text: oldTask?.title ?? '');
-
-    TimeOfDay start =
-        oldTask?.start ?? const TimeOfDay(hour: 8, minute: 0);
-    TimeOfDay end =
-        oldTask?.end ?? const TimeOfDay(hour: 9, minute: 30);
-
-    return showDialog<Task>(
-      context: context,
-      builder: (_) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+        final tasks = snapshot.data?.docs ?? [];
+        if (tasks.isEmpty) {
+          return Center(
+            child: Text(
+              'Chưa có lịch trình',
+              style: GoogleFonts.manrope(
+                color: Colors.black38,
+                fontWeight: FontWeight.w600,
               ),
-              title: Text(oldTask == null
-                  ? 'Thêm bài tập mới'
-                  : 'Chỉnh sửa bài tập'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
+            ),
+          );
+        }
+
+        // Sort tasks by startTime, fallback to dueDate
+        final sortedTasks = List<QueryDocumentSnapshot>.from(tasks)
+          ..sort((a, b) {
+            final dataA = a.data() as Map<String, dynamic>;
+            final dataB = b.data() as Map<String, dynamic>;
+            final t1 =
+                (dataA['startTime'] as Timestamp?) ??
+                (dataA['dueDate'] as Timestamp?);
+            final t2 =
+                (dataB['startTime'] as Timestamp?) ??
+                (dataB['dueDate'] as Timestamp?);
+            if (t1 == null) return 1;
+            if (t2 == null) return -1;
+            return t1.compareTo(t2);
+          });
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          itemCount: sortedTasks.length,
+          itemBuilder: (_, index) {
+            final doc = sortedTasks[index];
+            final data = doc.data() as Map<String, dynamic>;
+            final startTime = (data['startTime'] as Timestamp?)?.toDate();
+            final endTime = (data['endTime'] as Timestamp?)?.toDate();
+            final displayTime =
+                startTime ?? (data['dueDate'] as Timestamp?)?.toDate();
+
+            // Random-ish color for demo or based on status
+            Color barColor = const Color(0xFF4D47E5);
+            if (index % 3 == 0) barColor = const Color(0xFFE53935);
+            if (index % 3 == 1) barColor = const Color(0xFF8BC34A);
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 30),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextField(
-                    controller: titleCtrl,
-                    decoration:
-                        const InputDecoration(hintText: 'Tên môn học'),
+                  // Time
+                  SizedBox(
+                    width: 60,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(
+                        displayTime != null
+                            ? DateFormat('HH:mm').format(displayTime)
+                            : '--:--',
+                        style: GoogleFonts.manrope(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TextButton(
-                        onPressed: () async {
-                          final t = await showTimePicker(
-                            context: context,
-                            initialTime: start,
-                          );
-                          if (t != null) {
-                            setDialogState(() => start = t);
-                          }
-                        },
-                        child: Text('Bắt đầu: ${start.format(context)}'),
+                  const SizedBox(width: 8),
+                  // Task Card
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
                       ),
-                      TextButton(
-                        onPressed: () async {
-                          final t = await showTimePicker(
-                            context: context,
-                            initialTime: end,
-                          );
-                          if (t != null) {
-                            setDialogState(() => end = t);
-                          }
-                        },
-                        child: Text('Kết thúc: ${end.format(context)}'),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            data['title'] ?? 'N/A',
+                            style: GoogleFonts.manrope(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            startTime != null && endTime != null
+                                ? '${DateFormat('H:mm').format(startTime)} - ${DateFormat('H:mm').format(endTime)}'
+                                : (displayTime != null
+                                      ? DateFormat('H:mm').format(displayTime)
+                                      : 'N/A'),
+                            style: GoogleFonts.manrope(
+                              color: const Color(
+                                0xFF4D47E5,
+                              ).withValues(alpha: 0.5),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Thick Bottom Bar
+                          Container(
+                            height: 12,
+                            width: 100, // Matching Figma wide bar
+                            decoration: BoxDecoration(
+                              color: barColor,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(4),
+                                topRight: Radius.circular(4),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Huỷ'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    if (titleCtrl.text.trim().isEmpty) return;
-
-                    Navigator.pop(
-                      context,
-                      Task(
-                        id: oldTask?.id ??
-                            DateTime.now().millisecondsSinceEpoch.toString(),
-                        title: titleCtrl.text.trim(),
-                        date: selectedDate,
-                        start: start,
-                        end: end,
-                        color: Colors.primaries[
-                            DateTime.now().millisecond %
-                                Colors.primaries.length],
-                      ),
-                    );
-                  },
-                  child: const Text('Lưu'),
-                ),
-              ],
             );
           },
         );
       },
-    );
-  }
-}
-
-/* =======================
-   TASK CARD UI
-======================= */
-class _TaskCard extends StatelessWidget {
-  final Task task;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-
-  const _TaskCard({
-    required this.task,
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 52,
-            child: Text(
-              task.start.format(context),
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: task.color.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          task.title,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${task.start.format(context)} - ${task.end.format(context)}',
-                          style: const TextStyle(
-                              color: Colors.grey, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.edit, size: 18),
-                    onPressed: onEdit,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, size: 18),
-                    onPressed: onDelete,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

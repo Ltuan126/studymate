@@ -5,6 +5,7 @@ class TaskItem extends StatelessWidget {
   final String subject;
   final String time;
   final bool isDone;
+  final ValueChanged<bool?>? onToggle;
 
   const TaskItem({
     super.key,
@@ -12,6 +13,7 @@ class TaskItem extends StatelessWidget {
     required this.subject,
     required this.time,
     this.isDone = false,
+    this.onToggle,
   });
 
   @override
@@ -26,7 +28,7 @@ class TaskItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -36,9 +38,7 @@ class TaskItem extends StatelessWidget {
         children: [
           Checkbox(
             value: isDone,
-            onChanged: (_) {
-              // TODO: call controller toggle task
-            },
+            onChanged: onToggle,
             activeColor: primaryColor,
           ),
           const SizedBox(width: 8),
@@ -49,18 +49,16 @@ class TaskItem extends StatelessWidget {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        decoration:
-                            isDone ? TextDecoration.lineThrough : null,
-                      ),
+                    fontWeight: FontWeight.w600,
+                    decoration: isDone ? TextDecoration.lineThrough : null,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '$subject • $time',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: Colors.grey),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                 ),
               ],
             ),

@@ -5,14 +5,37 @@ class TaskController {
 
   Stream getTasks() => _service.getTasks();
 
-  Future<void> add(String title, {DateTime? dueDate}) =>
-      _service.addTask(title, dueDate: dueDate);
+  Future<void> add(
+    String title, {
+    DateTime? dueDate,
+    DateTime? startTime,
+    DateTime? endTime,
+    String? subjectId,
+  }) => _service.addTask(
+    title,
+    dueDate: dueDate,
+    startTime: startTime,
+    endTime: endTime,
+    subjectId: subjectId,
+  );
 
-  Future<void> update(String id, {String? title, DateTime? dueDate}) =>
-      _service.updateTask(id, title: title, dueDate: dueDate);
+  Future<void> update(
+    String id, {
+    String? title,
+    DateTime? dueDate,
+    DateTime? startTime,
+    DateTime? endTime,
+    String? subjectId,
+  }) => _service.updateTask(
+    id,
+    title: title,
+    dueDate: dueDate,
+    startTime: startTime,
+    endTime: endTime,
+    subjectId: subjectId,
+  );
 
-  Future<void> toggle(String id, bool value) =>
-      _service.toggleDone(id, value);
+  Future<void> toggle(String id, bool value) => _service.toggleDone(id, value);
 
   Future<void> delete(String id) => _service.deleteTask(id);
 }
