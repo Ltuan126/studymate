@@ -1,63 +1,46 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-// 🔥 chỉnh đúng đường dẫn theo project của bạn
 import 'login_screen.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final emailCtrl = TextEditingController();
-  final passCtrl = TextEditingController();
-  final rePassCtrl = TextEditingController();
-
   bool isLoading = false;
 
   @override
   void dispose() {
     emailCtrl.dispose();
-    passCtrl.dispose();
-    rePassCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _register() async {
+  Future<void> _resetPassword() async {
     final email = emailCtrl.text.trim();
-    final password = passCtrl.text.trim();
-    final rePassword = rePassCtrl.text.trim();
 
-    if (email.isEmpty || password.isEmpty || rePassword.isEmpty) {
-      _showSnack('Vui lòng điền đầy đủ thông tin');
-      return;
-    }
-
-    if (password != rePassword) {
-      _showSnack('Mật khẩu không trùng khớp');
-      return;
-    }
-
-    if (password.length < 6) {
-      _showSnack('Mật khẩu phải ít nhất 6 ký tự');
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập email')),
+      );
       return;
     }
 
     setState(() => isLoading = true);
 
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
 
       if (!mounted) return;
 
-      _showSnack('Đăng ký thành công');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã gửi email đặt lại mật khẩu'),
+        ),
+      );
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -65,28 +48,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       );
     } on FirebaseAuthException catch (e) {
-      String message = 'Đăng ký thất bại';
-
-      if (e.code == 'email-already-in-use') {
-        message = 'Email đã được sử dụng';
+      String message = 'Có lỗi xảy ra';
+      if (e.code == 'user-not-found') {
+        message = 'Không tìm thấy email này';
       } else if (e.code == 'invalid-email') {
         message = 'Email không hợp lệ';
-      } else if (e.code == 'weak-password') {
-        message = 'Mật khẩu quá yếu';
       }
 
-      _showSnack(message);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
     } finally {
       if (mounted) {
         setState(() => isLoading = false);
       }
     }
-  }
-
-  void _showSnack(String text) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(text)),
-    );
   }
 
   @override
@@ -104,73 +80,59 @@ class _RegisterScreenState extends State<RegisterScreen> {
               constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
                 children: [
-                  const SizedBox(height: 70),
+                  const SizedBox(height: 80),
                   const Text(
-                    'Tạo tài khoản mới',
+                    'Quên mật khẩu',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.w800,
+                      color: Colors.black,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 22),
                   Text(
-                    'Đăng ký để bắt đầu\nquản lý tiến trình học tập',
+                    'Nhập email để nhận liên kết\nđặt lại mật khẩu',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14.5,
-                      height: 1.4,
+                      height: 1.35,
                       color: Colors.black.withOpacity(0.45),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 80),
-
+                  const SizedBox(height: 90),
                   _RoundedField(
                     controller: emailCtrl,
                     hint: 'Email',
                     borderColor: border,
                   ),
-                  const SizedBox(height: 20),
-
-                  _RoundedField(
-                    controller: passCtrl,
-                    hint: 'Mật khẩu',
-                    borderColor: border,
-                    obscureText: true,
-                  ),
-                  const SizedBox(height: 20),
-
-                  _RoundedField(
-                    controller: rePassCtrl,
-                    hint: 'Nhập lại mật khẩu',
-                    borderColor: border,
-                    obscureText: true,
-                  ),
                   const SizedBox(height: 32),
-
                   SizedBox(
                     width: double.infinity,
                     height: 60,
                     child: ElevatedButton(
-                      onPressed: isLoading ? null : _register,
+                      onPressed: isLoading ? null : _resetPassword,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
                         ),
                       ),
                       child: isLoading
                           ? const SizedBox(
-                              width: 24,
                               height: 24,
+                              width: 24,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2,
                                 valueColor:
-                                    AlwaysStoppedAnimation(Colors.white),
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                                strokeWidth: 2,
                               ),
                             )
                           : const Text(
-                              'Đăng ký',
+                              'Gửi yêu cầu',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
@@ -178,33 +140,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                     ),
                   ),
-
-                  const SizedBox(height: 20),
-
-                  RichText(
-                    text: TextSpan(
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                  const SizedBox(height: 18),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (_) => const LoginScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'Quay lại đăng nhập',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
                         color: primary,
                       ),
-                      children: [
-                        const TextSpan(text: 'Đã có tài khoản? '),
-                        TextSpan(
-                          text: 'Đăng nhập',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                          ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(
-                                  builder: (_) => const LoginScreen(),
-                                ),
-                              );
-                            },
-                        ),
-                      ],
                     ),
                   ),
                 ],
@@ -221,13 +171,11 @@ class _RoundedField extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
   final Color borderColor;
-  final bool obscureText;
 
   const _RoundedField({
     required this.controller,
     required this.hint,
     required this.borderColor,
-    this.obscureText = false,
   });
 
   @override
@@ -236,14 +184,19 @@ class _RoundedField extends StatelessWidget {
       height: 58,
       child: TextField(
         controller: controller,
-        obscureText: obscureText,
         textAlign: TextAlign.center,
         style: const TextStyle(
           fontSize: 14.5,
           fontWeight: FontWeight.w700,
+          color: Colors.black,
         ),
         decoration: InputDecoration(
           hintText: hint,
+          hintStyle: TextStyle(
+            fontSize: 14.5,
+            fontWeight: FontWeight.w700,
+            color: Colors.black.withOpacity(0.70),
+          ),
           filled: true,
           fillColor: Colors.white,
           contentPadding:

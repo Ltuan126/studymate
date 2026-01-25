@@ -1,133 +1,301 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
-class CalendarScreen extends StatelessWidget {
+class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
 
   @override
+  State<CalendarScreen> createState() => _CalendarScreenState();
+}
+
+/* =======================
+   MODEL (đặt chung cho đỡ đỏ)
+======================= */
+class Task {
+  final String id;
+  String title;
+  DateTime date;
+  TimeOfDay start;
+  TimeOfDay end;
+  Color color;
+
+  Task({
+    required this.id,
+    required this.title,
+    required this.date,
+    required this.start,
+    required this.end,
+    required this.color,
+  });
+}
+
+class _CalendarScreenState extends State<CalendarScreen> {
+  DateTime selectedDate = DateTime.now();
+
+  final Map<DateTime, List<Task>> tasksByDate = {};
+
+  List<Task> get tasksOfSelectedDay {
+    final key = DateUtils.dateOnly(selectedDate);
+    return tasksByDate[key] ?? [];
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
+    final monthTitle = DateFormat('MMMM yyyy', 'vi').format(selectedDate);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFFDF6FB),
       appBar: AppBar(
-        title: const Text('Tháng 12, 2025'),
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          monthTitle,
+          style: const TextStyle(color: Colors.black),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add, color: Colors.black),
+            onPressed: _addTask,
+          )
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // =====================
-            // Day selector (UI only)
-            // =====================
-            SizedBox(
-              height: 72,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: const [
-                  _DayItem(day: 'Thứ 2', date: '08'),
-                  _DayItem(day: 'Thứ 3', date: '09', isSelected: true),
-                  _DayItem(day: 'Thứ 4', date: '10'),
-                  _DayItem(day: 'Thứ 5', date: '11'),
-                  _DayItem(day: 'Thứ 6', date: '12'),
-                  _DayItem(day: 'Thứ 7', date: '13'),
-                  _DayItem(day: 'CN', date: '14'),
-                ],
-              ),
-            ),
-
+            _buildDaySelector(),
             const SizedBox(height: 24),
-
-            // =====================
-            // Task list (demo data)
-            // =====================
-            const _TaskCard(
-              time: '08:00',
-              title: 'Lập trình web',
-              duration: '08:00 - 09:30',
-              color: Colors.red,
-            ),
-            const _TaskCard(
-              time: '09:40',
-              title: 'Cấu trúc dữ liệu & giải thuật',
-              duration: '09:40 - 11:10',
-              color: Colors.green,
-            ),
-            const _TaskCard(
-              time: '11:20',
-              title: 'Cơ sở dữ liệu',
-              duration: '11:20 - 12:50',
-              color: Colors.blue,
-            ),
+            Expanded(child: _buildTaskList()),
           ],
         ),
       ),
     );
   }
-}
 
-// ===================================================
-// Widget con: Day item (chọn ngày trong tuần)
-// ===================================================
-class _DayItem extends StatelessWidget {
-  final String day;
-  final String date;
-  final bool isSelected;
+  /* =======================
+     DAY SELECTOR (REAL TIME)
+  ======================= */
+  Widget _buildDaySelector() {
+    final startWeek =
+        selectedDate.subtract(Duration(days: selectedDate.weekday - 1));
 
-  const _DayItem({
-    required this.day,
-    required this.date,
-    this.isSelected = false,
-  });
+    return SizedBox(
+      height: 80,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: 7,
+        itemBuilder: (_, i) {
+          final day = startWeek.add(Duration(days: i));
+          final isSelected = DateUtils.isSameDay(day, selectedDate);
 
-  @override
-  Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
-
-    return Container(
-      width: 56,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: isSelected ? primaryColor : Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            day,
-            style: TextStyle(
-              fontSize: 12,
-              color: isSelected ? Colors.white : Colors.grey,
+          return GestureDetector(
+            onTap: () => setState(() => selectedDate = day),
+            child: Container(
+              width: 60,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.deepPurple : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    DateFormat('EEE', 'vi').format(day),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isSelected ? Colors.white : Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    day.day.toString(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            date,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: isSelected ? Colors.white : Colors.black,
-            ),
-          ),
-        ],
+          );
+        },
       ),
+    );
+  }
+
+  /* =======================
+     TASK LIST
+  ======================= */
+  Widget _buildTaskList() {
+    if (tasksOfSelectedDay.isEmpty) {
+      return const Center(
+        child: Text(
+          'Chưa có lịch cho ngày này',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: tasksOfSelectedDay.length,
+      itemBuilder: (_, index) {
+        final task = tasksOfSelectedDay[index];
+        return _TaskCard(
+          task: task,
+          onEdit: () => _editTask(task),
+          onDelete: () => _deleteTask(task),
+        );
+      },
+    );
+  }
+
+  /* =======================
+     ADD / EDIT / DELETE
+  ======================= */
+  void _addTask() async {
+    final task = await _openTaskDialog();
+    if (task == null) return;
+
+    final key = DateUtils.dateOnly(task.date);
+    setState(() {
+      tasksByDate.putIfAbsent(key, () => []);
+      tasksByDate[key]!.add(task);
+    });
+  }
+
+  void _editTask(Task task) async {
+    final updated = await _openTaskDialog(oldTask: task);
+    if (updated == null) return;
+
+    setState(() {
+      task.title = updated.title;
+      task.start = updated.start;
+      task.end = updated.end;
+      task.color = updated.color;
+    });
+  }
+
+  void _deleteTask(Task task) {
+    final key = DateUtils.dateOnly(task.date);
+    setState(() {
+      tasksByDate[key]?.remove(task);
+    });
+  }
+
+  /* =======================
+     ADD / EDIT DIALOG
+  ======================= */
+  Future<Task?> _openTaskDialog({Task? oldTask}) async {
+    final titleCtrl =
+        TextEditingController(text: oldTask?.title ?? '');
+
+    TimeOfDay start =
+        oldTask?.start ?? const TimeOfDay(hour: 8, minute: 0);
+    TimeOfDay end =
+        oldTask?.end ?? const TimeOfDay(hour: 9, minute: 30);
+
+    return showDialog<Task>(
+      context: context,
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Text(oldTask == null
+                  ? 'Thêm bài tập mới'
+                  : 'Chỉnh sửa bài tập'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: titleCtrl,
+                    decoration:
+                        const InputDecoration(hintText: 'Tên môn học'),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton(
+                        onPressed: () async {
+                          final t = await showTimePicker(
+                            context: context,
+                            initialTime: start,
+                          );
+                          if (t != null) {
+                            setDialogState(() => start = t);
+                          }
+                        },
+                        child: Text('Bắt đầu: ${start.format(context)}'),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          final t = await showTimePicker(
+                            context: context,
+                            initialTime: end,
+                          );
+                          if (t != null) {
+                            setDialogState(() => end = t);
+                          }
+                        },
+                        child: Text('Kết thúc: ${end.format(context)}'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Huỷ'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (titleCtrl.text.trim().isEmpty) return;
+
+                    Navigator.pop(
+                      context,
+                      Task(
+                        id: oldTask?.id ??
+                            DateTime.now().millisecondsSinceEpoch.toString(),
+                        title: titleCtrl.text.trim(),
+                        date: selectedDate,
+                        start: start,
+                        end: end,
+                        color: Colors.primaries[
+                            DateTime.now().millisecond %
+                                Colors.primaries.length],
+                      ),
+                    );
+                  },
+                  child: const Text('Lưu'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
 
-// ===================================================
-// Widget con: Task card (UI bài tập theo giờ)
-// ===================================================
+/* =======================
+   TASK CARD UI
+======================= */
 class _TaskCard extends StatelessWidget {
-  final String time;
-  final String title;
-  final String duration;
-  final Color color;
+  final Task task;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   const _TaskCard({
-    required this.time,
-    required this.title,
-    required this.duration,
-    required this.color,
+    required this.task,
+    required this.onEdit,
+    required this.onDelete,
   });
 
   @override
@@ -135,43 +303,49 @@ class _TaskCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Time column
           SizedBox(
-            width: 48,
+            width: 52,
             child: Text(
-              time,
-              style: Theme.of(context).textTheme.bodySmall,
+              task.start.format(context),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
-
           const SizedBox(width: 12),
-
-          // Task card
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: task.color.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          task.title,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w600),
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${task.start.format(context)} - ${task.end.format(context)}',
+                          style: const TextStyle(
+                              color: Colors.grey, fontSize: 12),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    duration,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: Colors.grey),
+                  IconButton(
+                    icon: const Icon(Icons.edit, size: 18),
+                    onPressed: onEdit,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, size: 18),
+                    onPressed: onDelete,
                   ),
                 ],
               ),
