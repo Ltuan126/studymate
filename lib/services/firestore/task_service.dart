@@ -27,7 +27,7 @@ class TaskService {
     DateTime? dueDate,
     DateTime? startTime,
     DateTime? endTime,
-    String? subjectId,
+    String? subjectName,
   }) async {
     if (title.trim().isEmpty) {
       throw Exception('Tiêu đề không được để trống');
@@ -47,7 +47,7 @@ class TaskService {
         'dueDate': dueDate != null ? Timestamp.fromDate(dueDate) : null,
         'startTime': startTime != null ? Timestamp.fromDate(startTime) : null,
         'endTime': endTime != null ? Timestamp.fromDate(endTime) : null,
-        'subjectId': subjectId,
+        'subjectName': subjectName,
         'dateKey': dateKey, // Added for calendar filtering
       });
     } catch (e) {
@@ -61,7 +61,7 @@ class TaskService {
     DateTime? dueDate,
     DateTime? startTime,
     DateTime? endTime,
-    String? subjectId,
+    String? subjectName,
   }) async {
     final update = <String, dynamic>{};
     if (title != null && title.trim().isNotEmpty) {
@@ -77,8 +77,8 @@ class TaskService {
     if (endTime != null) {
       update['endTime'] = Timestamp.fromDate(endTime);
     }
-    if (subjectId != null) {
-      update['subjectId'] = subjectId;
+    if (subjectName != null) {
+      update['subjectName'] = subjectName;
     }
 
     if (update.isEmpty) {
